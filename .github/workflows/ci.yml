@@ -16,8 +16,6 @@ jobs:
         run: echo "present=$([ -f pnpm-lock.yaml ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: pnpm/action-setup@v4
         if: steps.ws.outputs.present == 'true'
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         if: steps.ws.outputs.present == 'true'
         with:

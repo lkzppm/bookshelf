@@ -1,0 +1,23 @@
+{
+  "name": "@bookshelf/api",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "dev": "tsc -p tsconfig.json --watch & node --watch dist/server.js",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@bookshelf/core": "workspace:*",
+    "@fastify/cors": "^11.3.0",
+    "chokidar": "^5.0.0",
+    "fastify": "^5.10.0",
+    "minisearch": "^7.2.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
