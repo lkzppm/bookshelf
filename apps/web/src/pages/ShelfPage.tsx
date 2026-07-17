@@ -68,7 +68,7 @@ export default function ShelfPage() {
   const selected = cards.find((c) => c.id === selectedId);
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <AppBar position="static" elevation={0}>
         <Toolbar variant="dense">
           <IconButton edge="start" onClick={() => navigate("/")} aria-label="back to shelves">
@@ -96,7 +96,7 @@ export default function ShelfPage() {
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ flexGrow: 1, display: "flex", minHeight: 0 }}>
+      <Box sx={{ flexGrow: 1, display: "flex", minHeight: 0, overflow: "hidden" }}>
         <Box
           sx={{
             width: SIDEBAR_W,
