@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import ReactMarkdown from "react-markdown";
-import { STATUS_COLORS, TYPE_COLORS, type Card, type ShelfGraph } from "../types";
+import { STATUS_COLORS, TYPE_COLORS, statusTextColor, type Card, type ShelfGraph } from "../types";
 
 export interface CardPanelProps {
   card: Card;
@@ -48,7 +48,7 @@ export default function CardPanel({ card, graph, onClose, onEdit, onDelete, onSe
         <Chip
           label={card.status}
           size="small"
-          sx={{ bgcolor: STATUS_COLORS[card.status], color: "#0f1117", fontWeight: 700 }}
+          sx={{ bgcolor: STATUS_COLORS[card.status], color: statusTextColor(card.status), fontWeight: 700 }}
         />
         {card.load && <Chip label={`load: ${card.load}`} size="small" variant="outlined" />}
         <Box sx={{ flexGrow: 1 }} />
@@ -108,7 +108,7 @@ export default function CardPanel({ card, graph, onClose, onEdit, onDelete, onSe
           "& h1": { fontSize: 22 },
           "& h2": { fontSize: 18 },
           "& h3": { fontSize: 16 },
-          "& code": { bgcolor: "#0f1117", px: 0.5, borderRadius: 0.5, fontSize: 13 },
+          "& code": { bgcolor: "#16181d", px: 0.5, borderRadius: 0.5, fontSize: 13 },
           "& p, & li": { fontSize: 14, lineHeight: 1.6 },
           wordBreak: "break-word",
         }}
