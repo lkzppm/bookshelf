@@ -48,6 +48,10 @@ export function serializeCard(card: Card): string {
   };
   if (card.description) fm.description = card.description;
   if (card.owner) fm.owner = card.owner;
+  if (card.priority) fm.priority = card.priority;
+  if (card.effort !== undefined) fm.effort = card.effort;
+  if (card.iteration) fm.iteration = card.iteration;
+  if (card.due) fm.due = card.due;
   if (card.tags.length > 0) fm.tags = card.tags;
   if (card.load) fm.load = card.load;
 

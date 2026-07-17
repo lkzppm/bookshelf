@@ -1,4 +1,4 @@
-import type { Card, CardInput, ShelfGraph, ShelfMeta } from "./types";
+import type { Card, CardInput, RepoConfig, ShelfGraph, ShelfMeta, TraceCard, TraceData } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, {
@@ -37,4 +37,13 @@ export const api = {
     }),
   deleteCard: (slug: string, id: string) =>
     request<void>(`/api/shelves/${slug}/cards/${id}`, { method: "DELETE" }),
+  setRepo: (slug: string, path: string, name?: string) =>
+    request<RepoConfig>(`/api/shelves/${slug}/repo`, {
+      method: "PUT",
+      body: JSON.stringify({ path, name }),
+    }),
+  scan: (slug: string) => request<TraceData>(`/api/shelves/${slug}/scan`, { method: "POST" }),
+  getTrace: (slug: string) => request<TraceData>(`/api/shelves/${slug}/trace`),
+  reviewCard: (slug: string, id: string) =>
+    request<TraceCard>(`/api/shelves/${slug}/trace/${id}/review`, { method: "POST" }),
 };
