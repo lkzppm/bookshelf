@@ -1,0 +1,32 @@
+{
+  "name": "@bookshelf/web",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmit && vite build",
+    "test": "vitest run --passWithNoTests",
+    "dev": "vite --host"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "^3.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.2.0",
+    "@mui/material": "^9.2.0",
+    "@tanstack/react-query": "^5.101.2",
+    "@xyflow/react": "^12.11.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.18.1"
+  },
+  "devDependencies": {
+    "@types/dagre": "^0.7.54",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

@@ -1,0 +1,35 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    ports:
+      - "9300:9300"
+    volumes:
+      - bookshelf-data:/data
+    restart: unless-stopped
+
+  mcp:
+    build:
+      context: .
+      dockerfile: apps/mcp/Dockerfile
+    environment:
+      API_URL: http://api:9300
+    ports:
+      - "9400:9400"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  bookshelf-data:
