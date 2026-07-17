@@ -50,6 +50,19 @@ The agent gets six knowledge-graph tools shaping an **orient → locate → navi
 
 Shelf data is plain markdown with YAML frontmatter on the `bookshelf-data` volume — editable by hand, by agents, or via the UI; the API watches and reindexes on change.
 
+### Requirements traceability
+
+Each shelf has a **Requirements** tab: connect a repository, annotate code with `// @implements US-0001`, and hit **Scan**. Bookshelf hashes each annotated block — a requirement shows **checked** while its code blocks are unchanged, flips to **needs review** the moment implementing code changes, and returns to checked after a human **Review & accept**. Mount local repos into the api container via `docker-compose.override.yml`:
+
+```yaml
+services:
+  api:
+    volumes:
+      - /home/you/code/my-project:/repos/my-project:ro
+```
+
+The **Wiki** tab is the human face of the knowledge layer (concepts, standards, ADRs) — the same pages agents consume through MCP, with per-page agent load modes (`always` / `auto` / `manual`).
+
 ## Development
 
 ```bash

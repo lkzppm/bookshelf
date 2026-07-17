@@ -1,21 +1,8 @@
 import AddIcon from "@mui/icons-material/Add";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import AutoStoriesIcon from "@mui/icons-material/AutoStories";
-import {
-  Alert,
-  AppBar,
-  Box,
-  Button,
-  CircularProgress,
-  Drawer,
-  IconButton,
-  Stack,
-  Toolbar,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Drawer, Stack } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api";
 import CardFormDialog from "../components/CardFormDialog";
 import CardPanel from "../components/CardPanel";
@@ -27,15 +14,21 @@ import { EDGE_STYLES, type Card, type CardInput } from "../types";
 const SIDEBAR_W = 300;
 const PANEL_W = 420;
 
-export default function ShelfPage() {
+export default function GraphWorkspace() {
   const { slug = "" } = useParams();
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
   const cardsQuery = useQuery({ queryKey: ["cards", slug], queryFn: () => api.getCards(slug) });
   const graphQuery = useQuery({ queryKey: ["graph", slug], queryFn: () => api.getGraph(slug) });
 
-  const [selectedId, setSelectedId] = useState<string | undefined>();
+  const [selectedId, setSelectedIdState] = useState<string | undefined>(
+    searchParams.get("select") ?? undefined,
+  );
+  const setSelectedId = (id: string | undefined) => {
+    setSelectedIdState(id);
+    if (searchParams.get("select")) setSearchParams({}, { replace: true });
+  };
   const [visibleEdges, setVisibleEdges] = useState<Set<string>>(new Set(Object.keys(EDGE_STYLES)));
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Card | undefined>();
@@ -68,33 +61,33 @@ export default function ShelfPage() {
   const selected = cards.find((c) => c.id === selectedId);
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <AppBar position="static" elevation={0}>
-        <Toolbar variant="dense">
-          <IconButton edge="start" onClick={() => navigate("/")} aria-label="back to shelves">
-            <ArrowBackIcon />
-          </IconButton>
-          <AutoStoriesIcon sx={{ mx: 1, color: "primary.main" }} fontSize="small" />
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            {slug}
-          </Typography>
-          <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-            <EdgeFilter visible={visibleEdges} onChange={setVisibleEdges} />
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setEditing(undefined);
-                save.reset();
-                setFormOpen(true);
-              }}
-            >
-              New card
-            </Button>
-          </Stack>
-        </Toolbar>
-      </AppBar>
+    <>
+      <Stack
+        direction="row"
+        spacing={1.5}
+        sx={{
+          alignItems: "center",
+          px: 1.5,
+          py: 0.75,
+          borderBottom: "1px solid",
+          borderColor: "divider",
+          justifyContent: "flex-end",
+        }}
+      >
+        <EdgeFilter visible={visibleEdges} onChange={setVisibleEdges} />
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<AddIcon />}
+          onClick={() => {
+            setEditing(undefined);
+            save.reset();
+            setFormOpen(true);
+          }}
+        >
+          New card
+        </Button>
+      </Stack>
 
       <Box sx={{ flexGrow: 1, display: "flex", minHeight: 0, overflow: "hidden" }}>
         <Box
@@ -109,7 +102,7 @@ export default function ShelfPage() {
           <Explorer cards={cards} selectedId={selectedId} onSelect={setSelectedId} />
         </Box>
 
-        <Box sx={{ flexGrow: 1, position: "relative" }}>
+        <Box sx={{ flexGrow: 1, position: "relative", minWidth: 0 }}>
           {graphQuery.isLoading && (
             <Stack sx={{ alignItems: "center", justifyContent: "center", height: "100%" }}>
               <CircularProgress />
@@ -172,6 +165,6 @@ export default function ShelfPage() {
         onClose={() => setFormOpen(false)}
         onSubmit={(input) => save.mutate(input)}
       />
-    </Box>
+    </>
   );
 }

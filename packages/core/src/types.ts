@@ -18,6 +18,9 @@ export type CardStatus = (typeof CARD_STATUSES)[number];
 export const LOAD_MODES = ["always", "auto", "manual"] as const;
 export type LoadMode = (typeof LOAD_MODES)[number];
 
+export const PRIORITIES = ["critical", "high", "medium", "low"] as const;
+export type Priority = (typeof PRIORITIES)[number];
+
 export const EDGE_TYPES = ["parent", "depends-on", "relates-to", "supersedes", "wiki"] as const;
 export type EdgeType = (typeof EDGE_TYPES)[number];
 
@@ -35,6 +38,13 @@ export interface Card {
   status: CardStatus;
   description?: string;
   owner?: string;
+  priority?: Priority;
+  /** Story points / effort estimate. */
+  effort?: number;
+  /** Sprint / iteration label, e.g. "2026-Q3 Sprint 4". */
+  iteration?: string;
+  /** Due date, YYYY-MM-DD. */
+  due?: string;
   tags: string[];
   load?: LoadMode;
   links: CardLinks;

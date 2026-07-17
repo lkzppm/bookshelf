@@ -15,18 +15,24 @@ import { useEffect, useState } from "react";
 import {
   CARD_STATUSES,
   CARD_TYPES,
+  PRIORITIES,
   type Card,
   type CardInput,
   type CardType,
+  type Priority,
 } from "../types";
 
 const PARENT_TYPE: Partial<Record<CardType, CardType>> = { story: "feature", feature: "epic" };
+const KNOWLEDGE_TYPES: CardType[] = ["concept", "standard", "adr"];
+const LOAD_MODES = ["always", "auto", "manual"] as const;
 
 export interface CardFormDialogProps {
   open: boolean;
   cards: Card[];
   /** When set, the dialog edits this card; otherwise it creates a new one. */
   editing?: Card;
+  /** Restrict creation to knowledge types (wiki pages). */
+  knowledgeOnly?: boolean;
   error?: string;
   busy: boolean;
   onClose: () => void;
@@ -37,6 +43,7 @@ export default function CardFormDialog({
   open,
   cards,
   editing,
+  knowledgeOnly = false,
   error,
   busy,
   onClose,
@@ -51,10 +58,16 @@ export default function CardFormDialog({
   const [relatesTo, setRelatesTo] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [body, setBody] = useState("");
+  const [owner, setOwner] = useState("");
+  const [priority, setPriority] = useState<Priority | "">("");
+  const [effort, setEffort] = useState("");
+  const [iteration, setIteration] = useState("");
+  const [due, setDue] = useState("");
+  const [load, setLoad] = useState<"always" | "auto" | "manual" | "">("");
 
   useEffect(() => {
     if (!open) return;
-    setType(editing?.type ?? "story");
+    setType(editing?.type ?? (knowledgeOnly ? "concept" : "story"));
     setTitle(editing?.title ?? "");
     setDescription(editing?.description ?? "");
     setStatus(editing?.status ?? "draft");
@@ -63,7 +76,16 @@ export default function CardFormDialog({
     setRelatesTo(editing?.links["relates-to"] ?? []);
     setTags(editing?.tags ?? []);
     setBody(editing?.body ?? "");
-  }, [open, editing]);
+    setOwner(editing?.owner ?? "");
+    setPriority(editing?.priority ?? "");
+    setEffort(editing?.effort !== undefined ? String(editing.effort) : "");
+    setIteration(editing?.iteration ?? "");
+    setDue(editing?.due ?? "");
+    setLoad(editing?.load ?? "");
+  }, [open, editing, knowledgeOnly]);
+
+  const typeOptions = knowledgeOnly && !editing ? KNOWLEDGE_TYPES : CARD_TYPES;
+  const isKnowledge = KNOWLEDGE_TYPES.includes(type);
 
   const parentType = PARENT_TYPE[type];
   const parentOptions = cards.filter((c) => c.type === parentType).map((c) => c.id);
@@ -90,7 +112,7 @@ export default function CardFormDialog({
               disabled={!!editing}
               sx={{ minWidth: 140 }}
             >
-              {CARD_TYPES.map((t) => (
+              {typeOptions.map((t) => (
                 <MenuItem key={t} value={t}>
                   {t}
                 </MenuItem>
@@ -124,6 +146,68 @@ export default function CardFormDialog({
             onChange={(e) => setDescription(e.target.value)}
             fullWidth
           />
+
+          <Stack direction="row" spacing={2}>
+            <TextField
+              label="Assigned to"
+              value={owner}
+              onChange={(e) => setOwner(e.target.value)}
+              sx={{ flex: 1.2 }}
+            />
+            <TextField
+              select
+              label="Priority"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as Priority | "")}
+              sx={{ minWidth: 120 }}
+            >
+              <MenuItem value="">—</MenuItem>
+              {PRIORITIES.map((p) => (
+                <MenuItem key={p} value={p}>
+                  {p}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Effort (pts)"
+              value={effort}
+              onChange={(e) => setEffort(e.target.value.replace(/[^0-9.]/g, ""))}
+              sx={{ width: 100 }}
+            />
+            <TextField
+              label="Iteration"
+              value={iteration}
+              onChange={(e) => setIteration(e.target.value)}
+              placeholder="Sprint 4"
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              label="Due"
+              type="date"
+              value={due}
+              onChange={(e) => setDue(e.target.value)}
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ width: 160 }}
+            />
+          </Stack>
+
+          {isKnowledge && (
+            <TextField
+              select
+              label="Agent load mode (how agents receive this page)"
+              value={load}
+              onChange={(e) => setLoad(e.target.value as typeof load)}
+              helperText="always = injected into every context pack · auto = pulled when relevant · manual = on request only"
+              sx={{ maxWidth: 420 }}
+            >
+              <MenuItem value="">—</MenuItem>
+              {LOAD_MODES.map((m) => (
+                <MenuItem key={m} value={m}>
+                  {m}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
 
           {parentType && (
             <Autocomplete
@@ -193,6 +277,12 @@ export default function CardFormDialog({
               title: title.trim(),
               description: description.trim() || undefined,
               status,
+              owner: owner.trim() || undefined,
+              priority: priority || undefined,
+              effort: effort ? Number(effort) : undefined,
+              iteration: iteration.trim() || undefined,
+              due: due || undefined,
+              load: load || undefined,
               tags,
               links: {
                 ...(parent ? { parent } : {}),
