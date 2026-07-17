@@ -76,29 +76,35 @@ export interface CardInput {
   body?: string;
 }
 
+/** Azure DevOps work-item palette (epic orange, feature purple, story azure). */
 export const TYPE_COLORS: Record<CardType, string> = {
-  epic: "#8b5cf6",
-  feature: "#3b82f6",
-  story: "#10b981",
-  concept: "#f59e0b",
-  standard: "#ef4444",
-  adr: "#64748b",
+  epic: "#f58b1f",
+  feature: "#a374d8",
+  story: "#00a8e8",
+  concept: "#00b294",
+  standard: "#e8555b",
+  adr: "#8a8886",
 };
 
 export const STATUS_COLORS: Record<CardStatus, string> = {
-  draft: "#9ca3af",
-  review: "#f59e0b",
-  approved: "#3b82f6",
-  building: "#8b5cf6",
-  done: "#10b981",
-  verified: "#14b8a6",
-  archived: "#6b7280",
+  draft: "#8a8886",
+  review: "#f2cb1d",
+  approved: "#0078d4",
+  building: "#a374d8",
+  done: "#54a254",
+  verified: "#00b294",
+  archived: "#605e5c",
 };
 
+/** Chip text color that keeps contrast on each status color. */
+export function statusTextColor(status: CardStatus): string {
+  return status === "review" ? "#1b1a19" : "#fff";
+}
+
 export const EDGE_STYLES: Record<GraphEdge["type"], { stroke: string; dash?: string; label: string }> = {
-  parent: { stroke: "#94a3b8", label: "parent" },
-  "depends-on": { stroke: "#ef4444", dash: "6 3", label: "depends on" },
-  "relates-to": { stroke: "#3b82f6", dash: "2 3", label: "relates to" },
-  supersedes: { stroke: "#a78bfa", dash: "8 4", label: "supersedes" },
-  wiki: { stroke: "#64748b", dash: "1 4", label: "mentions" },
+  parent: { stroke: "#7a8394", label: "parent" },
+  "depends-on": { stroke: "#e8555b", dash: "6 3", label: "depends on" },
+  "relates-to": { stroke: "#0078d4", dash: "2 3", label: "relates to" },
+  supersedes: { stroke: "#a374d8", dash: "8 4", label: "supersedes" },
+  wiki: { stroke: "#8a8886", dash: "1 4", label: "mentions" },
 };
