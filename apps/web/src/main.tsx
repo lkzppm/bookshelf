@@ -8,14 +8,31 @@ import App from "./App";
 const theme = createTheme({
   palette: {
     mode: "dark",
-    primary: { main: "#8b5cf6" },
-    secondary: { main: "#10b981" },
-    background: { default: "#0f1117", paper: "#171923" },
+    primary: { main: "#0078d4" },
+    secondary: { main: "#00bcf2" },
+    background: { default: "#16181d", paper: "#1d2027" },
+    divider: "rgba(255,255,255,0.08)",
+    text: { primary: "#f3f4f6", secondary: "#9ba1ab" },
   },
   typography: {
-    fontFamily: '"Inter", "Segoe UI", system-ui, sans-serif',
+    fontFamily: '"Segoe UI", "Inter", system-ui, -apple-system, sans-serif',
+    h6: { fontWeight: 600 },
+    button: { textTransform: "none", fontWeight: 600 },
   },
-  shape: { borderRadius: 10 },
+  shape: { borderRadius: 4 },
+  components: {
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#1d2027",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          backgroundImage: "none",
+        },
+      },
+    },
+    MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } },
+    MuiChip: { styleOverrides: { root: { borderRadius: 4 } } },
+  },
 });
 
 const queryClient = new QueryClient({
