@@ -1,3 +1,12 @@
+import { Route, Routes } from "react-router-dom";
+import ShelfPage from "./pages/ShelfPage";
+import ShelvesPage from "./pages/ShelvesPage";
+
 export default function App() {
-  return <h1>Bookshelf</h1>;
+  return (
+    <Routes>
+      <Route path="/" element={<ShelvesPage />} />
+      <Route path="/shelf/:slug" element={<ShelfPage />} />
+    </Routes>
+  );
 }
