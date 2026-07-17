@@ -12,7 +12,14 @@ import {
   Typography,
 } from "@mui/material";
 import ReactMarkdown from "react-markdown";
-import { STATUS_COLORS, TYPE_COLORS, statusTextColor, type Card, type ShelfGraph } from "../types";
+import {
+  PRIORITY_COLORS,
+  STATUS_COLORS,
+  TYPE_COLORS,
+  statusTextColor,
+  type Card,
+  type ShelfGraph,
+} from "../types";
 
 export interface CardPanelProps {
   card: Card;
@@ -67,6 +74,17 @@ export default function CardPanel({ card, graph, onClose, onEdit, onDelete, onSe
       )}
 
       <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: "wrap" }}>
+        {card.priority && (
+          <Chip
+            label={`priority: ${card.priority}`}
+            size="small"
+            sx={{ bgcolor: PRIORITY_COLORS[card.priority], color: "#fff", fontWeight: 700 }}
+          />
+        )}
+        {card.effort !== undefined && <Chip label={`${card.effort} pts`} size="small" variant="outlined" />}
+        {card.iteration && <Chip label={card.iteration} size="small" variant="outlined" />}
+        {card.due && <Chip label={`due ${card.due}`} size="small" variant="outlined" />}
+        {card.owner && <Chip label={`@${card.owner}`} size="small" variant="outlined" />}
         {card.tags.map((t) => (
           <Chip key={t} label={t} size="small" variant="outlined" />
         ))}

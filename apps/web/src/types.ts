@@ -19,6 +19,9 @@ export interface CardLinks {
   supersedes: string[];
 }
 
+export const PRIORITIES = ["critical", "high", "medium", "low"] as const;
+export type Priority = (typeof PRIORITIES)[number];
+
 export interface Card {
   id: string;
   type: CardType;
@@ -26,6 +29,10 @@ export interface Card {
   status: CardStatus;
   description?: string;
   owner?: string;
+  priority?: Priority;
+  effort?: number;
+  iteration?: string;
+  due?: string;
   tags: string[];
   load?: "always" | "auto" | "manual";
   links: CardLinks;
@@ -35,6 +42,11 @@ export interface Card {
   tokens: number;
 }
 
+export interface RepoConfig {
+  name: string;
+  path: string;
+}
+
 export interface ShelfMeta {
   slug: string;
   name: string;
@@ -42,7 +54,44 @@ export interface ShelfMeta {
   created: string;
   cardCount: number;
   parseErrors: string[];
+  repo?: RepoConfig;
 }
+
+export type RequirementState = "checked" | "stale" | "unchecked";
+
+export interface CodeLink {
+  file: string;
+  line: number;
+  hash: string;
+  acceptedHash: string;
+  snippet: string;
+}
+
+export interface TraceCard {
+  state: RequirementState;
+  links: CodeLink[];
+}
+
+export interface TraceData {
+  repo?: RepoConfig;
+  scannedAt?: string;
+  filesScanned?: number;
+  warnings: string[];
+  cards: Record<string, TraceCard>;
+}
+
+export const STATE_COLORS: Record<RequirementState, string> = {
+  checked: "#54a254",
+  stale: "#f2cb1d",
+  unchecked: "#8a8886",
+};
+
+export const PRIORITY_COLORS: Record<Priority, string> = {
+  critical: "#e8555b",
+  high: "#f58b1f",
+  medium: "#f2cb1d",
+  low: "#7a8394",
+};
 
 export interface GraphNode {
   id: string;
@@ -70,6 +119,10 @@ export interface CardInput {
   description?: string;
   status?: CardStatus;
   owner?: string;
+  priority?: Priority;
+  effort?: number;
+  iteration?: string;
+  due?: string;
   tags?: string[];
   load?: "always" | "auto" | "manual";
   links?: Partial<CardLinks>;

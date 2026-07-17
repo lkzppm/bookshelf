@@ -69,6 +69,28 @@ export function buildApp(store: ShelfStore): FastifyInstance {
     store.graph(req.params.slug),
   );
 
+  app.put<{ Params: { slug: string }; Body: { path?: string; name?: string } }>(
+    "/api/shelves/:slug/repo",
+    async (req) => {
+      const { path: repoPath, name } = req.body ?? {};
+      if (!repoPath?.trim()) throw new StoreError(400, "path is required");
+      return store.setRepo(req.params.slug, repoPath.trim(), name?.trim() || undefined);
+    },
+  );
+
+  app.post<{ Params: { slug: string } }>("/api/shelves/:slug/scan", async (req) =>
+    store.scan(req.params.slug),
+  );
+
+  app.get<{ Params: { slug: string } }>("/api/shelves/:slug/trace", async (req) =>
+    store.trace(req.params.slug),
+  );
+
+  app.post<{ Params: { slug: string; id: string } }>(
+    "/api/shelves/:slug/trace/:id/review",
+    async (req) => store.reviewCard(req.params.slug, req.params.id),
+  );
+
   app.get<{ Params: { slug: string } }>("/api/shelves/:slug/issues", async (req) =>
     store.issues(req.params.slug),
   );

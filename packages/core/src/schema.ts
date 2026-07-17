@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CARD_STATUSES, CARD_TYPES, LOAD_MODES } from "./types.js";
+import { CARD_STATUSES, CARD_TYPES, LOAD_MODES, PRIORITIES } from "./types.js";
 
 /** YAML may parse dates as Date objects — normalize to YYYY-MM-DD strings. */
 const dateString = z
@@ -27,6 +27,10 @@ export const frontmatterSchema = z.object({
   status: z.enum(CARD_STATUSES).default("draft"),
   description: z.string().optional(),
   owner: z.string().optional(),
+  priority: z.enum(PRIORITIES).optional(),
+  effort: z.number().optional(),
+  iteration: z.string().optional(),
+  due: dateString.optional(),
   tags: z.array(z.string()).default([]),
   load: z.enum(LOAD_MODES).optional(),
   links: linksSchema,

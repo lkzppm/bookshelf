@@ -6,6 +6,7 @@ import {
   type CardStatus,
   type CardType,
   type LoadMode,
+  type Priority,
   type ShelfGraph,
   type ShelfIssue,
   buildContextPack,
@@ -21,6 +22,12 @@ import {
 import chokidar, { type FSWatcher } from "chokidar";
 import MiniSearch from "minisearch";
 import YAML from "yaml";
+import { type CodeLink, type RequirementState, cardState, mergeLinks, scanRepo } from "./scanner.js";
+
+export interface RepoConfig {
+  name: string;
+  path: string;
+}
 
 export interface ShelfMeta {
   slug: string;
@@ -29,6 +36,7 @@ export interface ShelfMeta {
   created: string;
   cardCount: number;
   parseErrors: string[];
+  repo?: RepoConfig;
 }
 
 export interface CardInput {
@@ -37,10 +45,34 @@ export interface CardInput {
   description?: string;
   status?: CardStatus;
   owner?: string;
+  priority?: Priority;
+  effort?: number;
+  iteration?: string;
+  due?: string;
   tags?: string[];
   load?: LoadMode;
   links?: Partial<CardLinks>;
   body?: string;
+}
+
+export interface TraceCard {
+  state: RequirementState;
+  links: CodeLink[];
+}
+
+export interface TraceData {
+  repo?: RepoConfig;
+  scannedAt?: string;
+  filesScanned?: number;
+  warnings: string[];
+  cards: Record<string, TraceCard>;
+}
+
+interface TraceFile {
+  scannedAt?: string;
+  filesScanned?: number;
+  warnings: string[];
+  cards: Record<string, CodeLink[]>;
 }
 
 export interface SearchHit {
@@ -53,10 +85,11 @@ export interface SearchHit {
 }
 
 interface ShelfState {
-  meta: { name: string; description: string; created: string };
+  meta: { name: string; description: string; created: string; repo?: RepoConfig };
   cards: Map<string, Card>;
   parseErrors: string[];
   search: MiniSearch;
+  trace: TraceFile;
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -121,12 +154,22 @@ export class ShelfStore {
 
   private loadShelf(slug: string): ShelfState {
     const metaFile = path.join(this.shelfDir(slug), "shelf.yml");
-    let meta = { name: slug, description: "", created: today() };
+    let meta: ShelfState["meta"] = { name: slug, description: "", created: today() };
     if (existsSync(metaFile)) {
       try {
         meta = { ...meta, ...YAML.parse(readFileSync(metaFile, "utf8")) };
       } catch {
         // fall back to defaults; shelf.yml is metadata only
+      }
+    }
+
+    let trace: TraceFile = { warnings: [], cards: {} };
+    const traceFile = path.join(this.shelfDir(slug), "trace.json");
+    if (existsSync(traceFile)) {
+      try {
+        trace = { warnings: [], cards: {}, ...JSON.parse(readFileSync(traceFile, "utf8")) };
+      } catch {
+        // corrupted trace is rebuildable by rescanning
       }
     }
 
@@ -153,7 +196,7 @@ export class ShelfStore {
       })),
     );
 
-    return { meta, cards, parseErrors, search };
+    return { meta, cards, parseErrors, search, trace };
   }
 
   listShelves(): ShelfMeta[] {
@@ -164,6 +207,7 @@ export class ShelfStore {
       created: s.meta.created,
       cardCount: s.cards.size,
       parseErrors: s.parseErrors,
+      ...(s.meta.repo ? { repo: s.meta.repo } : {}),
     }));
   }
 
@@ -218,6 +262,10 @@ export class ShelfStore {
       status: input.status ?? "draft",
       ...(input.description ? { description: input.description } : {}),
       ...(input.owner ? { owner: input.owner } : {}),
+      ...(input.priority ? { priority: input.priority } : {}),
+      ...(input.effort !== undefined ? { effort: input.effort } : {}),
+      ...(input.iteration ? { iteration: input.iteration } : {}),
+      ...(input.due ? { due: input.due } : {}),
       tags: input.tags ?? [],
       ...(input.load ? { load: input.load } : {}),
       links: {
@@ -247,6 +295,10 @@ export class ShelfStore {
       status: patch.status ?? existing.status,
       description: patch.description ?? existing.description,
       owner: patch.owner ?? existing.owner,
+      priority: patch.priority ?? existing.priority,
+      effort: patch.effort ?? existing.effort,
+      iteration: patch.iteration ?? existing.iteration,
+      due: patch.due ?? existing.due,
       tags: patch.tags ?? existing.tags,
       load: patch.load ?? existing.load,
       links: patch.links
@@ -303,6 +355,71 @@ export class ShelfStore {
         score: r.score,
         snippet: snippetFor(query, `${r.description ?? ""}\n${r.body ?? ""}`),
       }));
+  }
+
+  setRepo(slug: string, repoPath: string, name?: string): RepoConfig {
+    const shelf = this.shelf(slug);
+    if (!existsSync(repoPath)) throw new StoreError(400, `path not found on server: ${repoPath}`);
+    const repo: RepoConfig = { name: name ?? path.basename(repoPath), path: repoPath };
+    shelf.meta.repo = repo;
+    writeFileSync(path.join(this.shelfDir(slug), "shelf.yml"), YAML.stringify(shelf.meta));
+    return repo;
+  }
+
+  scan(slug: string): TraceData {
+    const shelf = this.shelf(slug);
+    const repo = shelf.meta.repo;
+    if (!repo) throw new StoreError(400, "no repository connected — set one via PUT .../repo first");
+    if (!existsSync(repo.path)) throw new StoreError(400, `repository path not found: ${repo.path}`);
+
+    const { hits, filesScanned } = scanRepo(repo.path);
+    const warnings: string[] = [];
+    const known = hits.filter((h) => {
+      if (shelf.cards.has(h.card)) return true;
+      warnings.push(`${h.file}:${h.line} references unknown card ${h.card}`);
+      return false;
+    });
+
+    shelf.trace = {
+      scannedAt: new Date().toISOString(),
+      filesScanned,
+      warnings,
+      cards: mergeLinks(shelf.trace.cards, known),
+    };
+    this.persistTrace(slug);
+    return this.trace(slug);
+  }
+
+  trace(slug: string): TraceData {
+    const shelf = this.shelf(slug);
+    const cards: Record<string, TraceCard> = {};
+    for (const [id, links] of Object.entries(shelf.trace.cards)) {
+      cards[id] = { state: cardState(links), links };
+    }
+    return {
+      ...(shelf.meta.repo ? { repo: shelf.meta.repo } : {}),
+      ...(shelf.trace.scannedAt ? { scannedAt: shelf.trace.scannedAt } : {}),
+      ...(shelf.trace.filesScanned !== undefined ? { filesScanned: shelf.trace.filesScanned } : {}),
+      warnings: shelf.trace.warnings,
+      cards,
+    };
+  }
+
+  reviewCard(slug: string, id: string): TraceCard {
+    const shelf = this.shelf(slug);
+    const links = shelf.trace.cards[id];
+    if (!links || links.length === 0) throw new StoreError(404, `no code links for card ${id}`);
+    for (const link of links) link.acceptedHash = link.hash;
+    this.persistTrace(slug);
+    return { state: cardState(links), links };
+  }
+
+  private persistTrace(slug: string): void {
+    const shelf = this.shelf(slug);
+    writeFileSync(
+      path.join(this.shelfDir(slug), "trace.json"),
+      JSON.stringify(shelf.trace, null, 2),
+    );
   }
 
   contextPack(slug: string, id: string, budget?: number) {

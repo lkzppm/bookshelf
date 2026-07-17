@@ -27,6 +27,10 @@ type: story            # epic | feature | story | concept | standard | adr
 title: Sync CLI writes managed CLAUDE.md block
 status: approved       # draft | review | approved | building | done | verified | archived
 owner: lucas
+priority: high         # critical | high | medium | low (PM field, optional)
+effort: 5              # story points (optional)
+iteration: 2026-Q3     # sprint/iteration label (optional)
+due: 2026-08-01        # optional
 tags: [cli, agent-sync]
 updated: 2026-07-17
 links:
